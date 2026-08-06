@@ -54,7 +54,3 @@ SELECT
     ROUND(TRY_CAST(REPLACE(NULLIF(TRIM("Homeownership Rate (5 Yr ACS)"),''),'%','') AS FLOAT)/100,3) AS Homeownership_Rate_5Yr_ACS,
     ROUND(TRY_CAST(REPLACE(NULLIF(TRIM("Disability Rate (5 Yr ACS)"),''),'%','') AS FLOAT)/100,3) AS Disability_Rate_5Yr_ACS
 FROM FTB.BRONZE.ZIP_CODE;
-
-
-SELECT overall_food_insecurity_rate, unemployment_rate_1yr_bls, poverty_rate_5yr_acs, percent_black_5yr_acs, percent_hispanic_5yr_acs, median_income_5yr_acs, homeownership_rate_5yr_acs, disability_rate_5yr_acs
-FROM PUBLIC.MMG.ZIP_CODE;
