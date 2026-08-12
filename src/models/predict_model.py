@@ -36,6 +36,11 @@ def forecast(model: dict, panel: pd.DataFrame, source_year: int) -> pd.DataFrame
     the year you actually want a forecast for.
     """
     inputs = build_forecast_inputs(panel, source_year, driver_cols=model["feature_cols"][1:])
-    inputs["prediction"] = clip_rate(predict_weighted_ridge(model, inputs[model["feature_cols"]]))
+    inputs["predicted_food_insecurity_rate"] = clip_rate(predict_weighted_ridge(model, inputs[model["feature_cols"]]))
+    inputs["source_year"] = source_year
     inputs["forecast_year"] = source_year + model["rate_lag"]
-    return inputs[["row_id", "State", "Food Bank 1", "population", "forecast_year", "prediction"]]
+
+    id_cols = ["row_id", "zcta", "county_fips", "Geography", "County, State", "State", "Food Bank 1", "population"]
+    year_cols = ["source_year", "forecast_year"]
+    output_cols = id_cols + year_cols + model["feature_cols"] + ["predicted_food_insecurity_rate"]
+    return inputs[output_cols]

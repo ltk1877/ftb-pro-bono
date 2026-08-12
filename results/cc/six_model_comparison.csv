@@ -1,0 +1,7 @@
+model,lag_years,validation_method,train_years,n_train,n_test,florida_mae,florida_rmse,national_mae
+Current-year drivers - Ridge (regularized),1,time_holdout,"2021, 2022, 2023",109148,36591,0.016,0.0216,0.0151
+"Current-year drivers - OLS (plain, interpretable)",1,time_holdout,"2021, 2022, 2023",109148,36591,0.016,0.0216,0.0151
+2-year lag - Ridge (regularized),2,time_holdout,"2022, 2023",72217,36369,0.0276,0.0313,0.0271
+"2-year lag - OLS (plain, interpretable)",2,time_holdout,"2022, 2023",72217,36369,0.0276,0.0313,0.0271
+3-year lag - Ridge (regularized),3,time_holdout,2023,35922,36035,0.0179,0.0248,0.0207
+"3-year lag - OLS (plain, interpretable)",3,time_holdout,2023,35922,36035,0.0237,0.0299,0.0185

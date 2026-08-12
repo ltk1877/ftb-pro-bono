@@ -78,6 +78,10 @@ target/
 # exclude data from source control by default
 /data/
 
+# per-run outputs from scripts/score_new_year.py -- regenerate, don't track
+/forecasts/*
+!/forecasts/.gitkeep
+
 # Mac OS-specific storage files
 .DS_Store
 
