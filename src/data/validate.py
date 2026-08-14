@@ -9,6 +9,8 @@ from pathlib import Path
 import pandas as pd
 from openpyxl import load_workbook
 
+from src.features.build_features import build_transition_table
+
 
 class ValidationError(Exception):
     """Raised when an input file doesn't have what the pipeline needs, with a specific reason."""
@@ -96,5 +98,25 @@ def validate_minimum_coverage(panel: pd.DataFrame, source_year: int, state: str,
             f"Only {len(complete)} ZIP rows {scope}have complete data at year {source_year} "
             f"(need at least {minimum_rows}). Check that the source file actually covers "
             f"{scope}and year {source_year}."
+        )
+    return len(complete)
+
+
+def validate_minimum_training_rows(panel: pd.DataFrame, driver_lag: int, rate_lag: int, driver_cols: list, minimum_rows: int = 10) -> int:
+    """Confirm there are enough complete (target-year, lagged-year) transitions to fit a model.
+
+    Unlike `validate_minimum_coverage` (one source year's snapshot, for scoring), training needs
+    paired observations `minimum_rows` rows deep -- built the same way `evaluate_lag_spec` builds
+    them -- so a bad or too-thin input surfaces here instead of as a raw ValueError/LinAlgError.
+    """
+    table = build_transition_table(panel, driver_lag, rate_lag, driver_cols)
+    complete = table.dropna(subset=["food_insecurity_rate", "lag_food_insecurity_rate"] + driver_cols)
+
+    if len(complete) < minimum_rows:
+        raise ValidationError(
+            f"Only {len(complete)} complete (year, year-{rate_lag}) transitions found across the "
+            f"loaded data (need at least {minimum_rows}). This usually means the loaded MMG "
+            f"workbook(s) don't span enough years -- a {rate_lag}-year lag needs rows with both a "
+            f"target year and an observation {rate_lag} years earlier for the same ZIP."
         )
     return len(complete)
