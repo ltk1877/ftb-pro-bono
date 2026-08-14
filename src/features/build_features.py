@@ -147,12 +147,20 @@ def build_panel(zcta_raw: pd.DataFrame, county_raw: pd.DataFrame, alice_county_r
         "unemployment_rate", "poverty_rate", "percent_black", "percent_hispanic", "log_median_income",
         "homeownership_rate", "disability_rate", "county_child_population_share",
         "county_percent_white_non_hispanic", "county_cost_per_meal", "county_weighted_food_cost_index",
-        "county_snap_threshold", "county_rural_urban_code_2023", "alice_financial_insecurity_rate",
-        "alice_poverty_household_rate", "alice_threshold_under_65", "alice_threshold_65_plus", "has_alice_data"
+        "county_snap_threshold", "county_rural_urban_code_2023",
     ]
     for col in numeric_features:
         panel[col] = panel.groupby("State")[col].transform(lambda s: s.fillna(s.median()))
         panel[col] = panel[col].fillna(panel[col].median())
+
+    # ALICE's release cadence is decoupled from MMG's, so a panel covering only years ALICE
+    # doesn't have would otherwise see its whole state-median fallback collapse to NaN (nothing
+    # in the same-year panel to compute a median from). Fall back to ALICE's own cross-year
+    # medians instead, which don't depend on which year(s) happen to be loaded into the panel.
+    alice_cols = ["alice_financial_insecurity_rate", "alice_poverty_household_rate", "alice_threshold_under_65", "alice_threshold_65_plus"]
+    alice_fallback = alice_features[alice_cols].median()
+    for col in alice_cols:
+        panel[col] = panel[col].fillna(alice_fallback[col])
 
     return panel
 
@@ -176,5 +184,6 @@ def build_forecast_inputs(panel: pd.DataFrame, source_year: int, driver_cols: li
     present, for evaluating against a known outcome), this just takes one observed year's
     rate/drivers as-is -- exactly what's available when scoring a real future forecast.
     """
-    source = panel.loc[panel["year"] == source_year, ["row_id", "population", "food_insecurity_rate", "Food Bank 1", "State"] + driver_cols].copy()
+    id_cols = ["row_id", "zcta", "county_fips", "Geography", "County, State", "State", "population", "food_insecurity_rate", "Food Bank 1"]
+    source = panel.loc[panel["year"] == source_year, id_cols + driver_cols].copy()
     return source.rename(columns={"food_insecurity_rate": "lag_food_insecurity_rate"})
