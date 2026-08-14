@@ -7,13 +7,10 @@ year, runs it through the same cleaning/feature pipeline used to train the model
 it with the already-fitted weights in models/cc/lag3_ridge.json -- no retraining.
 
 Usage:
-    python scripts/score_new_year.py --mmg path/to/MMG_2026_2025-data.xlsx
-
-    # Override the Florida ALICE file (defaults to the one already in data/external/):
-    python scripts/score_new_year.py --mmg new_mmg.xlsx --alice new_alice_county.csv
+    python scripts/score_new_year.py --mmg path/to/MMG_2026_2025-data.xlsx --alice path/to/alice_county.csv
 
     # Score all states instead of just Florida:
-    python scripts/score_new_year.py --mmg new_mmg.xlsx --state ""
+    python scripts/score_new_year.py --mmg new_mmg.xlsx --alice alice_county.csv --state ""
 
 Output: a CSV with one row per ZIP code, showing the driver values used (X) and the
 forecasted food insecurity rate (Y) for source_year + 3.
@@ -44,14 +41,13 @@ from src.features.build_features import build_panel
 from src.models.predict_model import forecast, load_model
 
 DEFAULT_MODEL_PATH = PROJECT_ROOT / "models" / "cc" / "lag3_ridge.json"
-DEFAULT_ALICE_PATH = PROJECT_ROOT / "data" / "external" / "2025 ALICE - Florida Data Sheet (Lee).xlsx - County.csv"
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "forecasts"
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--mmg", required=True, type=Path, help="Path to the raw MMG workbook (must have ZCTA and County sheets).")
-    parser.add_argument("--alice", type=Path, default=None, help="Path to the Florida ALICE county CSV. Defaults to the file already in data/external/ if omitted.")
+    parser.add_argument("--alice", required=True, type=Path, help="Path to the Florida ALICE county CSV (from unitedforalice.org). Always required -- there is no default, so scoring never silently falls back to a stale or unexpected file.")
     parser.add_argument("--model", type=Path, default=DEFAULT_MODEL_PATH, help=f"Path to the persisted model JSON. Default: {DEFAULT_MODEL_PATH.relative_to(PROJECT_ROOT)}")
     parser.add_argument("--source-year", type=int, default=None, help="Which year in --mmg to score from, if the file contains more than one year.")
     parser.add_argument("--state", default="FL", help="Two-letter state to restrict output to. Pass an empty string for all states. Default: FL.")
@@ -66,12 +62,8 @@ def main():
         mmg_path = require_file(args.mmg, "MMG workbook")
         validate_workbook_sheets(mmg_path, ["ZCTA", "County"])
 
-        if args.alice is not None:
-            alice_path = require_file(args.alice, "ALICE CSV")
-            print(f"Using provided ALICE file: {alice_path}")
-        else:
-            alice_path = require_file(DEFAULT_ALICE_PATH, "Default ALICE CSV")
-            print(f"No --alice file given -- falling back to existing ALICE data: {alice_path}")
+        alice_path = require_file(args.alice, "ALICE CSV")
+        print(f"Using ALICE file: {alice_path}")
 
         print(f"Reading {mmg_path.name} ...")
         zcta_raw = read_excel_sheet_openpyxl(mmg_path, "ZCTA")

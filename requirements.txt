@@ -10,6 +10,10 @@ flake8
 python-dotenv>=0.5.1
 pandas
 numpy
-openpyxl
+openpyxl>=3.1.5
+# pinned to satisfy pandas' minimum supported version -- an older copy already present
+# from another project won't get upgraded by a bare `pip install -r requirements.txt`
+# otherwise, and pandas will warn/error about it being too old
+numexpr>=2.10.2
 
 # test git sync
