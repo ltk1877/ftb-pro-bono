@@ -16,4 +16,8 @@ openpyxl>=3.1.5
 # otherwise, and pandas will warn/error about it being too old
 numexpr>=2.10.2
 
+# reporting/ and ingestion/load_ceres_bronze.py -- key-pair auth + loading into Snowflake
+snowflake-connector-python[pandas]>=4.7.1
+cryptography
+
 # test git sync
